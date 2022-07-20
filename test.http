@@ -1,0 +1,33 @@
+POST http://localhost:8080/categories
+Content-Type: application/json
+
+{
+  "name": "Gadget"
+}
+
+###
+## GET CATEGORY FIND ALL
+GET http://localhost:8080/categories
+accept: application/json
+
+###
+## GET CATEGORY BY ID
+GET http://localhost:8080/categories/1
+accept: application/json
+
+###
+##UDPATE CATEGORY
+PUT http://localhost:8080/categories/1
+Content-Type: application/json
+
+{
+  "name": "Gadgetin"
+}
+
+###
+##DELETE CATEGORY
+DELETE http://localhost:8080/categories/3
+Content-Type: application/json
+
+
+
