@@ -12,7 +12,7 @@ accept: application/json
 
 ###
 ## GET CATEGORY BY ID
-GET http://localhost:8080/categories/1
+GET http://localhost:8080/categories/43
 accept: application/json
 
 ###

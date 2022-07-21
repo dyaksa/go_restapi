@@ -12,7 +12,7 @@ type Category interface {
 	Save(ctx context.Context, tx *sql.Tx, category entity.Category) entity.Category
 	Update(ctx context.Context, tx *sql.Tx, category entity.Category) entity.Category
 	Delete(ctx context.Context, tx *sql.Tx, categoryId int)
-	FindOneByID(ctx context.Context, tx *sql.Tx, category entity.Category) (entity.Category, error)
+	FindOneByID(ctx context.Context, tx *sql.Tx, categoryId int) (entity.Category, error)
 	FindAll(ctx context.Context, tx *sql.Tx) []entity.Category
 }
 
@@ -53,18 +53,21 @@ func (repository *CategoryRepository) Delete(ctx context.Context, tx *sql.Tx, ca
 	helper.PanicIf(err)
 }
 
-func (repository *CategoryRepository) FindOneByID(ctx context.Context, tx *sql.Tx, category entity.Category) (entity.Category, error) {
+func (repository *CategoryRepository) FindOneByID(ctx context.Context, tx *sql.Tx, categoryId int) (entity.Category, error) {
 	query := "SELECT id, name FROM category WHERE id = ?"
-	row, err := tx.QueryContext(ctx, query, category.ID)
+	row, err := tx.QueryContext(ctx, query, categoryId)
 	helper.PanicIf(err)
 	defer row.Close()
 
+	var category entity.Category
 	if row.Next() {
 		err := row.Scan(&category.ID, &category.Name)
 		helper.PanicIf(err)
 		return category, nil
+	} else {
+		return category, errors.New("category not found")
 	}
-	return category, errors.New("category not found")
+
 }
 
 func (repository *CategoryRepository) FindAll(ctx context.Context, tx *sql.Tx) []entity.Category {

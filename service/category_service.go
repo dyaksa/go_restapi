@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/go-playground/validator/v10"
+	"golang_restapi/exception"
 	"golang_restapi/helper"
 	"golang_restapi/model/entity"
 	"golang_restapi/model/web"
@@ -62,8 +63,10 @@ func (service *CategoryServiceImpl) Update(ctx context.Context, request web.Cate
 		Name: request.Name,
 	}
 
-	_, err = service.repository.FindOneByID(ctx, tx, category)
-	helper.PanicIf(err)
+	_, err = service.repository.FindOneByID(ctx, tx, category.ID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	category = service.repository.Update(ctx, tx, category)
 	return helper.ToCategoryResponse(category)
@@ -74,12 +77,10 @@ func (service *CategoryServiceImpl) Delete(ctx context.Context, categoryId int) 
 	helper.PanicIf(err)
 	defer helper.CommitAndRollbackError(tx)
 
-	category := entity.Category{
-		ID: categoryId,
+	_, err = service.repository.FindOneByID(ctx, tx, categoryId)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
 	}
-
-	category, err = service.repository.FindOneByID(ctx, tx, category)
-	helper.PanicIf(err)
 
 	service.repository.Delete(ctx, tx, categoryId)
 }
@@ -89,12 +90,11 @@ func (service *CategoryServiceImpl) FindByID(ctx context.Context, categoryId int
 	helper.PanicIf(err)
 	defer helper.CommitAndRollbackError(tx)
 
-	category := entity.Category{
-		ID: categoryId,
+	category, err := service.repository.FindOneByID(ctx, tx, categoryId)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
 	}
 
-	category, err = service.repository.FindOneByID(ctx, tx, category)
-	helper.PanicIf(err)
 	return helper.ToCategoryResponse(category)
 }
 

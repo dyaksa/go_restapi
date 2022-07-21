@@ -4,8 +4,10 @@ import (
 	validator2 "github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	db2 "golang_restapi/db"
+	"golang_restapi/exception"
 	"golang_restapi/handler"
 	"golang_restapi/helper"
+	"golang_restapi/middleware"
 	"golang_restapi/repository"
 	"golang_restapi/service"
 	"net/http"
@@ -35,9 +37,11 @@ func main() {
 	route.PUT("/categories/:categoryId", categoryHandler.Update)
 	route.DELETE("/categories/:categoryId", categoryHandler.Delete)
 
+	route.PanicHandler = exception.ErrorHandler
+
 	server := http.Server{
 		Addr:    "localhost:8080",
-		Handler: route,
+		Handler: middleware.NewAuthMiddleware(route),
 	}
 
 	err = server.ListenAndServe()
