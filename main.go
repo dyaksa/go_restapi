@@ -2,9 +2,8 @@ package main
 
 import (
 	validator2 "github.com/go-playground/validator/v10"
-	"github.com/julienschmidt/httprouter"
+	"golang_restapi/app"
 	db2 "golang_restapi/db"
-	"golang_restapi/exception"
 	"golang_restapi/handler"
 	"golang_restapi/helper"
 	"golang_restapi/middleware"
@@ -29,15 +28,7 @@ func main() {
 	categoryService := service.NewCategoryService(db, categoryRepository, validator)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 
-	route := httprouter.New()
-
-	route.GET("/categories", categoryHandler.FindAll)
-	route.POST("/categories", categoryHandler.Create)
-	route.GET("/categories/:categoryId", categoryHandler.FindOneByID)
-	route.PUT("/categories/:categoryId", categoryHandler.Update)
-	route.DELETE("/categories/:categoryId", categoryHandler.Delete)
-
-	route.PanicHandler = exception.ErrorHandler
+	route := app.SetupRouter(categoryHandler)
 
 	server := http.Server{
 		Addr:    "localhost:8080",

@@ -11,6 +11,8 @@ func ErrorHandler(w http.ResponseWriter, r *http.Request, err interface{}) {
 	if notFoundError(w, r, err) {
 		return
 
+	} else if validationError(w, r, err) {
+		return
 	} else {
 		internalServerError(w, r, err)
 	}

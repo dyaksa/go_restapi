@@ -15,7 +15,7 @@ func NewAuthMiddleware(handler http.Handler) *AuthMiddleware {
 }
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if "secret" == w.Header().Get("X-Api-Key") {
+	if "secret" == r.Header.Get("X-Api-Key") {
 		m.handler.ServeHTTP(w, r)
 	} else {
 		w.Header().Set("content-type", "application/json")

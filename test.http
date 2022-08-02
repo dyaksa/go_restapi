@@ -9,6 +9,7 @@ Content-Type: application/json
 ## GET CATEGORY FIND ALL
 GET http://localhost:8080/categories
 accept: application/json
+X-Api-Key: secret
 
 ###
 ## GET CATEGORY BY ID
