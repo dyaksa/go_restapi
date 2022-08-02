@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/json"
 	validator2 "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"golang_restapi/app"
@@ -9,6 +10,7 @@ import (
 	"golang_restapi/middleware"
 	"golang_restapi/repository"
 	"golang_restapi/service"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,5 +41,13 @@ func TestCreateCategorySuccess(t *testing.T) {
 
 	response := recorder.Result()
 
+	var categoryResponse = map[string]interface{}{}
+	body, _ := io.ReadAll(response.Body)
+
+	_ = json.Unmarshal(body, &categoryResponse)
+
 	assert.Equal(t, 200, response.StatusCode)
+	assert.Equal(t, "OK", categoryResponse["status"])
+	assert.Equal(t, 200, int(categoryResponse["code"].(float64)))
+	assert.Equal(t, "new category", categoryResponse["data"].(map[string]interface{})["name"])
 }
