@@ -21,7 +21,7 @@ type CategoryHandlerImpl struct {
 	categoryService service.CategoryService
 }
 
-func NewCategoryHandler(categoryService service.CategoryService) CategoryHandler {
+func NewCategoryHandler(categoryService service.CategoryService) *CategoryHandlerImpl {
 	return &CategoryHandlerImpl{categoryService: categoryService}
 }
 

@@ -25,7 +25,7 @@ type CategoryServiceImpl struct {
 	validator  *validator.Validate
 }
 
-func NewCategoryService(tx *sql.DB, repository repository.Category, validator *validator.Validate) CategoryService {
+func NewCategoryService(tx *sql.DB, repository repository.Category, validator *validator.Validate) *CategoryServiceImpl {
 	return &CategoryServiceImpl{
 		tx:         tx,
 		repository: repository,

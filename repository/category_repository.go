@@ -19,7 +19,7 @@ type Category interface {
 type CategoryRepository struct {
 }
 
-func NewCategoryRepository() Category {
+func NewCategoryRepository() *CategoryRepository {
 	return &CategoryRepository{}
 }
 
