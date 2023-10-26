@@ -4,9 +4,6 @@
 package main
 
 import (
-	"github.com/go-playground/validator/v10"
-	"github.com/google/wire"
-	"github.com/julienschmidt/httprouter"
 	"golang_restapi/app"
 	"golang_restapi/db"
 	"golang_restapi/handler"
@@ -14,6 +11,10 @@ import (
 	"golang_restapi/repository"
 	"golang_restapi/service"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/google/wire"
+	"github.com/julienschmidt/httprouter"
 )
 
 var categorySet = wire.NewSet(

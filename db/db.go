@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 func init() {
@@ -31,14 +31,14 @@ func (i *DBInstance) Instance() interface{} {
 
 func dbInit() interface{} {
 	dbHost := "localhost"
-	dbPort := "3306"
-	dbUser := "root"
-	dbPass := "password123!"
-	dbName := "belajar_golang_api"
+	dbPort := "5432"
+	dbUser := "admin"
+	dbPass := "password"
+	dbName := "belajar_golang"
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
 
-	db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("postgres", dsn)
 
 	if err != nil {
 		log.Default().Println(err)

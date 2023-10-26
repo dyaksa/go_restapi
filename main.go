@@ -17,5 +17,4 @@ func main() {
 	server := InitializedServer()
 	err := server.ListenAndServe()
 	helper.PanicIf(err)
-
 }
