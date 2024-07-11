@@ -34,9 +34,10 @@ func dbInit() interface{} {
 	dbPort := "5432"
 	dbUser := "admin"
 	dbPass := "password"
-	dbName := "belajar_golang"
+	dbName := "sandbox_pii"
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPass, dbName)
 
 	db, err := sql.Open("postgres", dsn)
 
@@ -44,6 +45,11 @@ func dbInit() interface{} {
 		log.Default().Println(err)
 		os.Exit(1)
 		db.Close()
+	}
+
+	if err := db.Ping(); err != nil {
+		log.Default().Println(err)
+		os.Exit(1)
 	}
 
 	db.SetMaxIdleConns(8)

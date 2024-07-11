@@ -1,9 +1,13 @@
 package helper
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
 func PanicIf(err error) {
 	if err != nil {
+		fmt.Println("error : %w", err)
 		panic(err)
 	}
 }
