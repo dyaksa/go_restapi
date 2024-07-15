@@ -58,5 +58,6 @@ type FindProfileByParams struct {
 }
 
 type FindProfileByBIDXParams struct {
-	Hash []string
+	ColumnHeap string
+	Hash       []string
 }

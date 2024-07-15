@@ -6,11 +6,16 @@ import (
 	"fmt"
 	"golang_restapi/model/entity"
 	"strings"
+
+	crypt "github.com/dyaksa/encryption-pii/go-encrypt"
 )
+
+type Entity interface{}
 
 type Profile interface {
 	Save(ctx context.Context, tx *sql.Tx, profile entity.Profile) error
 	FetchProfile(ctx context.Context, args entity.FetchProfileParams, tx *sql.Tx, iOptionalInitFunc func(*entity.FetchProfileRow)) (entity.FetchProfileRow, error)
+	Find(ctx context.Context, args entity.FindProfileByBIDXParams, tx *sql.Tx, c *crypt.Lib) ([]entity.FindProfilesByNameRow, error)
 	FindBy(ctx context.Context, column string, args entity.FindProfileByBIDXParams, tx *sql.Tx, iOptionalInitFunc func(*entity.FindProfilesByNameRow)) ([]entity.FindProfilesByNameRow, error)
 	Update(ctx context.Context, tx *sql.Tx, profile entity.Profile) error
 }
@@ -54,7 +59,7 @@ func (repository *ProfileRepository) FindBy(ctx context.Context, column string, 
 			iOptionalInitFunc(&i)
 		}
 
-		err = rows.Scan(&i.ID, &i.Nik, &i.Name, &i.Phone, &i.Email, &i.Dob)
+		err = rows.Scan(&i.ID, &i.Nik, &i.Name, &i.Email, &i.Phone, &i.Dob)
 		if err != nil {
 			return
 		}
@@ -62,6 +67,20 @@ func (repository *ProfileRepository) FindBy(ctx context.Context, column string, 
 		pbnr = append(pbnr, i)
 	}
 	return
+}
+
+func (repository *ProfileRepository) Find(ctx context.Context, args entity.FindProfileByBIDXParams, tx *sql.Tx, c *crypt.Lib) ([]entity.FindProfilesByNameRow, error) {
+	baseQuery := "SELECT id, nik, name, email, phone, dob FROM profile"
+	return crypt.QueryLike(ctx, baseQuery, tx, func(ip *crypt.ILikeParams) {
+		ip.ColumnHeap = args.ColumnHeap
+		ip.Hash = args.Hash
+	}, func(t *entity.FindProfilesByNameRow) {
+		t.Nik = c.BToString()
+		t.Name = c.BToString()
+		t.Phone = c.BToString()
+		t.Email = c.BToString()
+		t.Dob = c.BToString()
+	})
 }
 
 func (repository *ProfileRepository) Update(ctx context.Context, tx *sql.Tx, profile entity.Profile) error {

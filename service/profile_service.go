@@ -8,10 +8,7 @@ import (
 	"golang_restapi/model/web"
 	"golang_restapi/repository"
 	"net/url"
-	"regexp"
-	"strings"
 
-	"github.com/dyaksa/encryption-pii/crypt/sqlval"
 	crypt "github.com/dyaksa/encryption-pii/go-encrypt"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -55,68 +52,29 @@ func (service *ProfileServiceImpl) Create(ctx context.Context, tenantID uuid.UUI
 	helper.PanicIf(err)
 	defer helper.CommitAndRollbackError(tx)
 
-	regex := regexp.MustCompile(`[a-zA-Z0-9]+`)
+	email, emailDict := service.crypt.BuildHeap(request.Email, typeHeapEmail)
+	name, nameDict := service.crypt.BuildHeap(request.Name, typeHeapProfileName)
 
-	partsMail := strings.Split(request.Email, "@")
-	splitMails := []string{}
-	for _, part := range partsMail {
-		matches := regex.FindAllString(part, -1)
-		splitMails = append(splitMails, matches...)
-	}
-
-	partsName := strings.Split(request.Name, " ")
-	splitNames := []string{}
-	for _, part := range partsName {
-		matches := regex.FindAllString(part, -1)
-		splitNames = append(splitNames, matches...)
-	}
-
-	var textHeaps = []entity.TextHeap{}
-	var mailBuilder = new(strings.Builder)
-	var nameBuilder = new(strings.Builder)
-
-	for _, splitMail := range splitMails {
-		textHeaps = append(textHeaps, entity.TextHeap{
-			ID:      uuid.New(),
-			Content: strings.ToLower(splitMail),
-			Hash:    sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitMail),
-			Type:    typeHeapEmail,
-		})
-		mailBuilder.WriteString(sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitMail).HashString())
-	}
-
-	for _, splitName := range splitNames {
-		textHeaps = append(textHeaps, entity.TextHeap{
-			ID:      uuid.New(),
-			Content: strings.ToLower(splitName),
-			Hash:    sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitName),
-			Type:    typeHeapProfileName,
-		})
-		nameBuilder.WriteString(sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitName).HashString())
-	}
-
-	id := uuid.New()
 	profile := entity.Profile{
-		ID:        id,
-		Nik:       sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Nik, id[:]),
-		NikBidx:   sqlval.BIDXString(service.crypt.BIDXFunc(tenantID), request.Nik),
-		Name:      sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Name, id[:]),
-		NameBidx:  nameBuilder.String(),
-		Phone:     sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Phone, id[:]),
-		PhoneBidx: sqlval.BIDXString(service.crypt.BIDXFunc(tenantID), request.Phone),
-		Email:     sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Email, id[:]),
-		EmailBidx: mailBuilder.String(),
-		DOB:       sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.DOB, id[:]),
-	}
-
-	for _, th := range textHeaps {
-		if ok, _ := service.textHeap.IsHashExist(ctx, tx, th.Type, entity.FindTextHeapByHashParams{Hash: th.Hash.HashString()}); !ok {
-			err = service.textHeap.Save(ctx, tx, th.Type, th)
-			helper.PanicIf(err)
-		}
+		ID:        uuid.New(),
+		Nik:       service.crypt.AEADString(request.Nik),
+		NikBidx:   service.crypt.BIDXString(request.Nik),
+		Name:      service.crypt.AEADString(request.Name),
+		NameBidx:  name,
+		Phone:     service.crypt.AEADString(request.Phone),
+		PhoneBidx: service.crypt.BIDXString(request.Phone),
+		Email:     service.crypt.AEADString(request.Email),
+		EmailBidx: email,
+		DOB:       service.crypt.AEADString(request.DOB),
 	}
 
 	err = service.repository.Save(ctx, tx, profile)
+	helper.PanicIf(err)
+
+	err = service.crypt.SaveToHeap(ctx, tx, emailDict)
+	helper.PanicIf(err)
+
+	err = service.crypt.SaveToHeap(ctx, tx, nameDict)
 	helper.PanicIf(err)
 
 	return request
@@ -127,13 +85,12 @@ func (service *ProfileServiceImpl) FetchProfile(ctx context.Context, tenantID uu
 	helper.PanicIf(err)
 
 	spr, err := service.repository.FetchProfile(ctx, entity.FetchProfileParams{ID: id}, tx, func(fpr *entity.FetchProfileRow) {
-		fpr.Nik = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", id[:])
-		fpr.Name = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", id[:])
-		fpr.Phone = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", id[:])
-		fpr.Email = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", id[:])
-		fpr.DOB = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", id[:])
+		fpr.Nik = service.crypt.BToString()
+		fpr.Name = service.crypt.BToString()
+		fpr.Phone = service.crypt.BToString()
+		fpr.Email = service.crypt.BToString()
+		fpr.DOB = service.crypt.BToString()
 	})
-
 	helper.PanicIf(err)
 
 	pr := &web.ProfileResponse{
@@ -167,14 +124,9 @@ func (service *ProfileServiceImpl) FindByTextHeapContent(ctx context.Context, te
 
 	heaps := []string{}
 	for _, param := range params {
-		_, err := service.textHeap.FindByContent(ctx, tx,
-			param.Type,
-			entity.FindTextHeapByContentParams{Content: param.Content},
-			nil,
-			func(fthr entity.FindTextHeapRow) (bool, error) {
-				heaps = append(heaps, fthr.Hash)
-				return true, nil
-			})
+		heaps, err = service.crypt.SearchContents(
+			ctx, tx, param.Type,
+			crypt.FindTextHeapByContentParams{Content: param.Content})
 		helper.PanicIf(err)
 	}
 
@@ -185,14 +137,7 @@ func (service *ProfileServiceImpl) FindByTextHeapContent(ctx context.Context, te
 		column = "name_bidx"
 	}
 
-	spr, err := service.repository.FindBy(ctx, column, entity.FindProfileByBIDXParams{Hash: heaps}, tx, func(fpbnr *entity.FindProfilesByNameRow) {
-		fpbnr.Nik = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", fpbnr.ID[:])
-		fpbnr.Name = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", fpbnr.ID[:])
-		fpbnr.Phone = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", fpbnr.ID[:])
-		fpbnr.Email = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", fpbnr.ID[:])
-		fpbnr.Dob = sqlval.AEADString(service.crypt.AEADFunc(tenantID), "", fpbnr.ID[:])
-	})
-	helper.PanicIf(err)
+	spr, err := service.repository.Find(ctx, entity.FindProfileByBIDXParams{ColumnHeap: column, Hash: heaps}, tx, service.crypt)
 
 	for _, sp := range spr {
 		pr := &web.ProfileResponse{
@@ -217,65 +162,27 @@ func (service *ProfileServiceImpl) Update(ctx context.Context, id uuid.UUID, ten
 	helper.PanicIf(err)
 	defer helper.CommitAndRollbackError(tx)
 
-	regex := regexp.MustCompile(`[a-zA-Z0-9]+`)
-
-	partsMail := strings.Split(request.Email, "@")
-	splitMails := []string{}
-	for _, part := range partsMail {
-		matches := regex.FindAllString(part, -1)
-		splitMails = append(splitMails, matches...)
-	}
-
-	partsName := strings.Split(request.Name, " ")
-	splitNames := []string{}
-	for _, part := range partsName {
-		matches := regex.FindAllString(part, -1)
-		splitNames = append(splitNames, matches...)
-	}
-
-	var textHeaps = []entity.TextHeap{}
-	var mailBuilder = new(strings.Builder)
-	var nameBuilder = new(strings.Builder)
-
-	for _, splitMail := range splitMails {
-		textHeaps = append(textHeaps, entity.TextHeap{
-			ID:      uuid.New(),
-			Content: strings.ToLower(splitMail),
-			Hash:    sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitMail),
-			Type:    typeHeapEmail,
-		})
-		mailBuilder.WriteString(sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitMail).HashString())
-	}
-
-	for _, splitName := range splitNames {
-		textHeaps = append(textHeaps, entity.TextHeap{
-			ID:      uuid.New(),
-			Content: strings.ToLower(splitName),
-			Hash:    sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitName),
-			Type:    typeHeapProfileName,
-		})
-		nameBuilder.WriteString(sqlval.HMACString(service.crypt.HMACFunc(tenantID), splitName).HashString())
-	}
+	email, emailDict := service.crypt.BuildHeap(request.Email, typeHeapEmail)
+	name, nameDict := service.crypt.BuildHeap(request.Name, typeHeapProfileName)
 
 	profile := entity.Profile{
 		ID:        id,
-		Nik:       sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Nik, id[:]),
-		NikBidx:   sqlval.BIDXString(service.crypt.BIDXFunc(tenantID), request.Nik),
-		Name:      sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Name, id[:]),
-		NameBidx:  nameBuilder.String(),
-		Phone:     sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Phone, id[:]),
-		PhoneBidx: sqlval.BIDXString(service.crypt.BIDXFunc(tenantID), request.Phone),
-		Email:     sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.Email, id[:]),
-		EmailBidx: mailBuilder.String(),
-		DOB:       sqlval.AEADString(service.crypt.AEADFunc(tenantID), request.DOB, id[:]),
+		Nik:       service.crypt.AEADString(request.Nik),
+		NikBidx:   service.crypt.BIDXString(request.Nik),
+		Name:      service.crypt.AEADString(request.Name),
+		NameBidx:  name,
+		Phone:     service.crypt.AEADString(request.Phone),
+		PhoneBidx: service.crypt.BIDXString(request.Phone),
+		Email:     service.crypt.AEADString(request.Email),
+		EmailBidx: email,
+		DOB:       service.crypt.AEADString(request.DOB),
 	}
 
-	for _, th := range textHeaps {
-		if ok, _ := service.textHeap.IsHashExist(ctx, tx, th.Type, entity.FindTextHeapByHashParams{Hash: th.Hash.HashString()}); !ok {
-			err = service.textHeap.Save(ctx, tx, th.Type, th)
-			helper.PanicIf(err)
-		}
-	}
+	err = service.crypt.SaveToHeap(ctx, tx, emailDict)
+	helper.PanicIf(err)
+
+	err = service.crypt.SaveToHeap(ctx, tx, nameDict)
+	helper.PanicIf(err)
 
 	err = service.repository.Update(ctx, tx, profile)
 	helper.PanicIf(err)
