@@ -52,29 +52,16 @@ func (service *ProfileServiceImpl) Create(ctx context.Context, tenantID uuid.UUI
 	helper.PanicIf(err)
 	defer helper.CommitAndRollbackError(tx)
 
-	email, emailDict := service.crypt.BuildHeap(request.Email, typeHeapEmail)
-	name, nameDict := service.crypt.BuildHeap(request.Name, typeHeapProfileName)
-
 	profile := entity.Profile{
-		ID:        uuid.New(),
-		Nik:       service.crypt.AEADString(request.Nik),
-		NikBidx:   service.crypt.BIDXString(request.Nik),
-		Name:      service.crypt.AEADString(request.Name),
-		NameBidx:  name,
-		Phone:     service.crypt.AEADString(request.Phone),
-		PhoneBidx: service.crypt.BIDXString(request.Phone),
-		Email:     service.crypt.AEADString(request.Email),
-		EmailBidx: email,
-		DOB:       service.crypt.AEADString(request.DOB),
+		ID:    uuid.New(),
+		Nik:   service.crypt.AEADString(request.Nik),
+		Name:  service.crypt.AEADString(request.Name),
+		Phone: service.crypt.AEADString(request.Phone),
+		Email: service.crypt.AEADString(request.Email),
+		DOB:   service.crypt.AEADString(request.DOB),
 	}
 
-	err = service.repository.Save(ctx, tx, profile)
-	helper.PanicIf(err)
-
-	err = service.crypt.SaveToHeap(ctx, tx, emailDict)
-	helper.PanicIf(err)
-
-	err = service.crypt.SaveToHeap(ctx, tx, nameDict)
+	err = service.crypt.InsertWithHeap(ctx, tx, "profile", profile)
 	helper.PanicIf(err)
 
 	return request
@@ -162,27 +149,14 @@ func (service *ProfileServiceImpl) Update(ctx context.Context, id uuid.UUID, ten
 	helper.PanicIf(err)
 	defer helper.CommitAndRollbackError(tx)
 
-	email, emailDict := service.crypt.BuildHeap(request.Email, typeHeapEmail)
-	name, nameDict := service.crypt.BuildHeap(request.Name, typeHeapProfileName)
-
 	profile := entity.Profile{
-		ID:        id,
-		Nik:       service.crypt.AEADString(request.Nik),
-		NikBidx:   service.crypt.BIDXString(request.Nik),
-		Name:      service.crypt.AEADString(request.Name),
-		NameBidx:  name,
-		Phone:     service.crypt.AEADString(request.Phone),
-		PhoneBidx: service.crypt.BIDXString(request.Phone),
-		Email:     service.crypt.AEADString(request.Email),
-		EmailBidx: email,
-		DOB:       service.crypt.AEADString(request.DOB),
+		ID:    id,
+		Nik:   service.crypt.AEADString(request.Nik),
+		Name:  service.crypt.AEADString(request.Name),
+		Phone: service.crypt.AEADString(request.Phone),
+		Email: service.crypt.AEADString(request.Email),
+		DOB:   service.crypt.AEADString(request.DOB),
 	}
-
-	err = service.crypt.SaveToHeap(ctx, tx, emailDict)
-	helper.PanicIf(err)
-
-	err = service.crypt.SaveToHeap(ctx, tx, nameDict)
-	helper.PanicIf(err)
 
 	err = service.repository.Update(ctx, tx, profile)
 	helper.PanicIf(err)

@@ -13,7 +13,6 @@ import (
 type Entity interface{}
 
 type Profile interface {
-	Save(ctx context.Context, tx *sql.Tx, profile entity.Profile) error
 	FetchProfile(ctx context.Context, args entity.FetchProfileParams, tx *sql.Tx, iOptionalInitFunc func(*entity.FetchProfileRow)) (entity.FetchProfileRow, error)
 	Find(ctx context.Context, args entity.FindProfileByBIDXParams, tx *sql.Tx, c *crypt.Lib) ([]entity.FindProfilesByNameRow, error)
 	FindBy(ctx context.Context, column string, args entity.FindProfileByBIDXParams, tx *sql.Tx, iOptionalInitFunc func(*entity.FindProfilesByNameRow)) ([]entity.FindProfilesByNameRow, error)
@@ -24,12 +23,6 @@ type ProfileRepository struct{}
 
 func NewProfileRepository() *ProfileRepository {
 	return &ProfileRepository{}
-}
-
-func (repository *ProfileRepository) Save(ctx context.Context, tx *sql.Tx, profile entity.Profile) error {
-	query := "INSERT INTO profile (id, nik, nik_bidx, name, name_bidx, phone, phone_bidx, email, email_bidx, dob) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
-	_, err := tx.ExecContext(ctx, query, profile.ID, profile.Nik, profile.NikBidx, profile.Name, profile.NameBidx, profile.Phone, profile.PhoneBidx, profile.Email, profile.EmailBidx, profile.DOB)
-	return err
 }
 
 func (repository *ProfileRepository) FetchProfile(ctx context.Context, args entity.FetchProfileParams, tx *sql.Tx, iOptionalInitFunc func(*entity.FetchProfileRow)) (entity.FetchProfileRow, error) {
@@ -86,8 +79,8 @@ func (repository *ProfileRepository) Find(ctx context.Context, args entity.FindP
 func (repository *ProfileRepository) Update(ctx context.Context, tx *sql.Tx, profile entity.Profile) error {
 	fmt.Println(profile.Email)
 	fmt.Println(profile.ID)
-	query := "UPDATE profile SET nik = $1, nik_bidx = $2, name = $3, name_bidx = $4, phone = $5, phone_bidx = $6, email = $7, email_bidx = $8, dob = $9 WHERE id = $10"
-	_, err := tx.ExecContext(ctx, query, profile.Nik, profile.NikBidx, profile.Name, profile.NameBidx, profile.Phone, profile.PhoneBidx, profile.Email, profile.EmailBidx, profile.DOB, profile.ID)
+	query := "UPDATE profile SET nik = $1, nik_bidx = $2, name = $3, phone = $4, phone_bidx = $5, email = $6, dob = $7 WHERE id = $8"
+	_, err := tx.ExecContext(ctx, query, profile.Nik, profile.Name, profile.Phone, profile.Email, profile.DOB, profile.ID)
 	return err
 }
 
