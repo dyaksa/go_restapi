@@ -11,7 +11,6 @@ import (
 	"net/http"
 
 	"github.com/dyaksa/encryption-pii/crypto"
-	crypt "github.com/dyaksa/encryption-pii/go-encrypt"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -25,27 +24,19 @@ func NewServer(authMiddleware *middleware.AuthMiddleware) *http.Server {
 func main() {
 	sqlDB := db.DB()
 	validate := validator.New()
-	c, err := crypt.New()
+	crypto, err := crypto.New(
+		crypto.Aes256KeySize,
+		crypto.WithInitHeapConnection(),
+	)
 	helper.PanicIf(err)
 
-	crypto, err := crypto.New(crypto.Aes256KeySize)
-	helper.PanicIf(err)
-
-	categoryRepository := repository.NewCategoryRepository()
 	profileRepository := repository.NewProfileRepository()
-	textHeapRepository := repository.NewTextHeapRepository()
 
-	categoryServiceImpl := service.NewCategoryService(sqlDB, categoryRepository, validate)
-	profileServiceImpl := service.NewProfileService(sqlDB, profileRepository, textHeapRepository, validate, c)
-	profileServiceV2Impl := service.NewProfileServiceV2(sqlDB, crypto, validate)
-	invoiceService := service.NewInvoiceService(sqlDB)
+	profileServiceImpl := service.NewProfileService(sqlDB, profileRepository, validate, crypto)
 
-	categoryHandlerImpl := handler.NewCategoryHandler(categoryServiceImpl)
 	profileHandlerImpl := handler.NewProfileHandler(profileServiceImpl)
-	profileV2HandlerImpl := handler.NewProfileV2(profileServiceV2Impl)
-	invoiceHandlerImpl := handler.NewInvoiceHandler(invoiceService)
 
-	router := app.SetupRouter(categoryHandlerImpl, profileHandlerImpl, profileV2HandlerImpl, *invoiceHandlerImpl)
+	router := app.SetupRouter(profileHandlerImpl)
 
 	authMiddleware := middleware.NewAuthMiddleware(router)
 	server := NewServer(authMiddleware)

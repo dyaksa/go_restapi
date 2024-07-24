@@ -31,10 +31,10 @@ func (i *DBInstance) Instance() interface{} {
 
 func dbInit() interface{} {
 	dbHost := "localhost"
-	dbPort := "5453"
-	dbUser := "dev_fabd_user_revenue_owner"
-	dbPass := "aefopsrDt2vqHUUI"
-	dbName := "dev_fabd_revenue"
+	dbPort := "5432"
+	dbUser := "admin"
+	dbPass := "password"
+	dbName := "sandbox_pii"
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPass, dbName)

@@ -46,6 +46,16 @@ github.com/dyaksa/encryption-pii v1.2.0 h1:ul1rIfMwnTwdjdSI2Q0fsegTB7IpDkQ/qp+kC
 github.com/dyaksa/encryption-pii v1.2.0/go.mod h1:+KTvyhB7cC8DlPrN0TUSzlJALrr2VjKq/NusVf6iSRY=
 github.com/dyaksa/encryption-pii v1.2.1 h1:CT5yLxKHFQ1pi7+JMU1k/QuDT8E+85js7eYi6KaN5ys=
 github.com/dyaksa/encryption-pii v1.2.1/go.mod h1:+KTvyhB7cC8DlPrN0TUSzlJALrr2VjKq/NusVf6iSRY=
+github.com/dyaksa/encryption-pii v1.3.4 h1:jXbN2Ae2PDwsDIS1fJvJc0/5m/Mt08/OTzOEDzrmJ3Q=
+github.com/dyaksa/encryption-pii v1.3.4/go.mod h1:B7pz2eDbhQvqkgztRTzI9LsFWucCkhQXLnAEvDXHOq4=
+github.com/dyaksa/encryption-pii v1.3.6 h1:3ZLJzGwNoOZF1DebohJUdkunIz6JhGUddhSqyLdkP0c=
+github.com/dyaksa/encryption-pii v1.3.6/go.mod h1:B7pz2eDbhQvqkgztRTzI9LsFWucCkhQXLnAEvDXHOq4=
+github.com/dyaksa/encryption-pii v1.3.7 h1:pfc/EeTNs1jFx1jW0suNwiosIH7/cyxRiFf68Kvevgg=
+github.com/dyaksa/encryption-pii v1.3.7/go.mod h1:B7pz2eDbhQvqkgztRTzI9LsFWucCkhQXLnAEvDXHOq4=
+github.com/dyaksa/encryption-pii v1.3.8 h1:RISvXjCAGjrNnZSSq/IhIohG8mlvQ9r24ei/CAtSEFw=
+github.com/dyaksa/encryption-pii v1.3.8/go.mod h1:B7pz2eDbhQvqkgztRTzI9LsFWucCkhQXLnAEvDXHOq4=
+github.com/dyaksa/encryption-pii v1.3.9 h1:WUfcHvhLIEAG7gMGm1tmWLV8f28mT+9IiEEf9fku6bQ=
+github.com/dyaksa/encryption-pii v1.3.9/go.mod h1:B7pz2eDbhQvqkgztRTzI9LsFWucCkhQXLnAEvDXHOq4=
 github.com/go-playground/assert/v2 v2.0.1 h1:MsBgLAaY856+nPRTKrp3/OZK38U/wa0CcBYNjji3q3A=
 github.com/go-playground/assert/v2 v2.0.1/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
 github.com/go-playground/locales v0.14.0 h1:u50s323jtVGugKlcYeyzC0etD1HifMjqmJqb8WugfUU=

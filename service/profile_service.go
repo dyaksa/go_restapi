@@ -3,84 +3,95 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"golang_restapi/dto"
 	"golang_restapi/helper"
 	"golang_restapi/model/entity"
 	"golang_restapi/model/web"
 	"golang_restapi/repository"
-	"net/url"
+	"golang_restapi/utils"
 
-	crypt "github.com/dyaksa/encryption-pii/go-encrypt"
+	"github.com/dyaksa/encryption-pii/crypto"
+	"github.com/dyaksa/encryption-pii/crypto/aesx"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
-const (
-	typeHeapEmail       = "email_text_heap"
-	typeHeapProfileName = "profile_text_heap"
-)
-
 type ProfileService interface {
-	Create(ctx context.Context, tenantID uuid.UUID, request web.ProfileRequest) web.ProfileRequest
-	FetchProfile(ctx context.Context, tenantID uuid.UUID, id uuid.UUID) *web.ProfileResponse
-	FindByTextHeapContent(ctx context.Context, tenantID uuid.UUID, values url.Values) (prs []*web.ProfileResponse, err error)
-	Update(ctx context.Context, id uuid.UUID, tenantID uuid.UUID, request web.ProfileRequest) web.ProfileRequest
+	Create(ctx context.Context, request web.ProfileRequest) (web.ProfileRequest, error)
+	FetchProfile(ctx context.Context, id uuid.UUID) (*dto.FetchProfileDto, error)
+	FindAll(ctx context.Context, pagination utils.Pagination, params dto.ParamsListProfile) ([]*dto.FetchProfileDto, error)
+	Update(ctx context.Context, id uuid.UUID, request web.ProfileRequest) (web.ProfileRequest, error)
 }
 
 type ProfileServiceImpl struct {
 	db         *sql.DB
 	repository repository.Profile
-	textHeap   repository.TextHeap
 	validator  *validator.Validate
-	crypt      *crypt.Lib
+	crypto     *crypto.Crypto
 }
 
-func NewProfileService(db *sql.DB, repository repository.Profile, textHeap repository.TextHeap, validator *validator.Validate, crypt *crypt.Lib) *ProfileServiceImpl {
+func NewProfileService(db *sql.DB, repository repository.Profile, validator *validator.Validate, crypto *crypto.Crypto) *ProfileServiceImpl {
 	return &ProfileServiceImpl{
 		db:         db,
 		repository: repository,
-		textHeap:   textHeap,
 		validator:  validator,
-		crypt:      crypt,
+		crypto:     crypto,
 	}
 }
 
-func (service *ProfileServiceImpl) Create(ctx context.Context, tenantID uuid.UUID, request web.ProfileRequest) web.ProfileRequest {
-	err := service.validator.Struct(request)
-	helper.PanicIf(err)
+func (service *ProfileServiceImpl) Create(ctx context.Context, request web.ProfileRequest) (p web.ProfileRequest, err error) {
+	err = service.validator.Struct(request)
+	if err != nil {
+		err = fmt.Errorf("error validation: %w", err)
+		return
+	}
 
 	tx, err := service.db.Begin()
-	helper.PanicIf(err)
+	if err != nil {
+		return
+	}
+
 	defer helper.CommitAndRollbackError(tx)
 
 	profile := entity.Profile{
 		ID:    uuid.New(),
-		Nik:   service.crypt.AEADString(request.Nik),
-		Name:  service.crypt.AEADString(request.Name),
-		Phone: service.crypt.AEADString(request.Phone),
-		Email: service.crypt.AEADString(request.Email),
-		DOB:   service.crypt.AEADString(request.DOB),
+		Nik:   service.crypto.Encrypt(request.Nik, aesx.AesCBC),
+		Name:  service.crypto.Encrypt(request.Name, aesx.AesCBC),
+		Phone: service.crypto.Encrypt(request.Phone, aesx.AesCBC),
+		Email: service.crypto.Encrypt(request.Email, aesx.AesCBC),
+		DOB:   service.crypto.Encrypt(request.DOB, aesx.AesCBC),
 	}
 
-	err = service.crypt.InsertWithHeap(ctx, tx, "profile", profile)
-	helper.PanicIf(err)
+	if err = service.crypto.BindHeap(&profile); err != nil {
+		err = fmt.Errorf("error binding heap: %w", err)
+		return
+	}
 
-	return request
+	if err = service.repository.Create(ctx, tx, profile); err != nil {
+		err = fmt.Errorf("error when inserting profile: %w", err)
+		return
+	}
+
+	return request, nil
 }
 
-func (service *ProfileServiceImpl) FetchProfile(ctx context.Context, tenantID uuid.UUID, id uuid.UUID) *web.ProfileResponse {
+func (service *ProfileServiceImpl) FetchProfile(ctx context.Context, id uuid.UUID) (pr *dto.FetchProfileDto, err error) {
 	tx, err := service.db.Begin()
-	helper.PanicIf(err)
+	if err != nil {
+		return
+	}
 
-	spr, err := service.repository.FetchProfile(ctx, entity.FetchProfileParams{ID: id}, tx, func(fpr *entity.FetchProfileRow) {
-		fpr.Nik = service.crypt.BToString()
-		fpr.Name = service.crypt.BToString()
-		fpr.Phone = service.crypt.BToString()
-		fpr.Email = service.crypt.BToString()
-		fpr.DOB = service.crypt.BToString()
+	spr, err := service.repository.FetchProfile(ctx, id, tx, func(fpr *entity.Profile) {
+		fpr.Nik = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.Name = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.Phone = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.Email = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.DOB = service.crypto.Decrypt(aesx.AesCBC)
 	})
 	helper.PanicIf(err)
 
-	pr := &web.ProfileResponse{
+	pr = &dto.FetchProfileDto{
 		ID:    id,
 		Nik:   spr.Nik.To(),
 		Name:  spr.Name.To(),
@@ -89,59 +100,40 @@ func (service *ProfileServiceImpl) FetchProfile(ctx context.Context, tenantID uu
 		DOB:   spr.DOB.To(),
 	}
 
-	return pr
-}
-
-func (service *ProfileServiceImpl) FindByTextHeapContent(ctx context.Context, tenantID uuid.UUID, values url.Values) (prs []*web.ProfileResponse, err error) {
-	var isType string
-	var column string
-	var params = []entity.FindProfileByParams{
-		{Type: typeHeapEmail, Content: values.Get("email")},
-		{Type: typeHeapProfileName, Content: values.Get("name")},
-	}
-
-	for _, param := range params {
-		if param.Content != "" {
-			isType = param.Type
-		}
-	}
-
-	tx, err := service.db.Begin()
-	helper.PanicIf(err)
-
-	heaps := []string{}
-	for _, param := range params {
-		heaps, err = service.crypt.SearchContents(
-			ctx, tx, param.Type,
-			crypt.FindTextHeapByContentParams{Content: param.Content})
-		helper.PanicIf(err)
-	}
-
-	switch isType {
-	case typeHeapEmail:
-		column = "email_bidx"
-	case typeHeapProfileName:
-		column = "name_bidx"
-	}
-
-	spr, err := service.repository.Find(ctx, entity.FindProfileByBIDXParams{ColumnHeap: column, Hash: heaps}, tx, service.crypt)
-
-	for _, sp := range spr {
-		pr := &web.ProfileResponse{
-			ID:    sp.ID,
-			Nik:   sp.Nik.To(),
-			Name:  sp.Name.To(),
-			Phone: sp.Phone.To(),
-			Email: sp.Email.To(),
-			DOB:   sp.Dob.To(),
-		}
-		prs = append(prs, pr)
-	}
-
 	return
 }
 
-func (service *ProfileServiceImpl) Update(ctx context.Context, id uuid.UUID, tenantID uuid.UUID, request web.ProfileRequest) web.ProfileRequest {
+func (service *ProfileServiceImpl) FindAll(ctx context.Context, pagination utils.Pagination, params dto.ParamsListProfile) (prs []*dto.FetchProfileDto, err error) {
+	tx, err := service.db.Begin()
+	if err != nil {
+		return prs, err
+	}
+
+	_, err = service.repository.FindAll(ctx, pagination, params, tx, service.crypto, func(fpr *entity.Profile) {
+		fpr.Nik = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.Name = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.Phone = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.Email = service.crypto.Decrypt(aesx.AesCBC)
+		fpr.DOB = service.crypto.Decrypt(aesx.AesCBC)
+	}, func(p entity.Profile) {
+		pr := &dto.FetchProfileDto{
+			ID:    p.ID,
+			Nik:   p.Nik.To(),
+			Name:  p.Name.To(),
+			Phone: p.Phone.To(),
+			Email: p.Email.To(),
+			DOB:   p.DOB.To(),
+		}
+		prs = append(prs, pr)
+	})
+
+	if err != nil {
+		return prs, err
+	}
+	return prs, nil
+}
+
+func (service *ProfileServiceImpl) Update(ctx context.Context, id uuid.UUID, request web.ProfileRequest) (web.ProfileRequest, error) {
 	err := service.validator.Struct(request)
 	helper.PanicIf(err)
 
@@ -151,19 +143,22 @@ func (service *ProfileServiceImpl) Update(ctx context.Context, id uuid.UUID, ten
 
 	profile := entity.Profile{
 		ID:    id,
-		Nik:   service.crypt.AEADString(request.Nik),
-		Name:  service.crypt.AEADString(request.Name),
-		Phone: service.crypt.AEADString(request.Phone),
-		Email: service.crypt.AEADString(request.Email),
-		DOB:   service.crypt.AEADString(request.DOB),
+		Nik:   service.crypto.Encrypt(request.Nik, aesx.AesCBC),
+		Name:  service.crypto.Encrypt(request.Name, aesx.AesCBC),
+		Phone: service.crypto.Encrypt(request.Phone, aesx.AesCBC),
+		Email: service.crypto.Encrypt(request.Email, aesx.AesCBC),
+		DOB:   service.crypto.Encrypt(request.DOB, aesx.AesCBC),
+	}
+
+	err = service.crypto.BindHeap(&profile)
+	if err != nil {
+		return request, err
 	}
 
 	err = service.repository.Update(ctx, tx, profile)
-	helper.PanicIf(err)
+	if err != nil {
+		return request, err
+	}
 
-	return request
+	return request, nil
 }
-
-// func pqByteArray(arr [][]byte) driver.Valuer {
-// 	return pq.ByteaArray(arr)
-// }

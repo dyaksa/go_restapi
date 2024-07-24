@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"github.com/dyaksa/encryption-pii/crypt/types"
 	"github.com/google/uuid"
 )
 
@@ -9,7 +8,7 @@ type TextHeap struct {
 	ID      uuid.UUID
 	Content string
 	Type    string
-	Hash    types.HMACString
+	Hash    string
 }
 
 type FindTextHeapRow struct {

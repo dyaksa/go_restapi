@@ -5,7 +5,7 @@ go 1.22.1
 toolchain go1.22.4
 
 require (
-	github.com/dyaksa/encryption-pii v1.2.1
+	github.com/dyaksa/encryption-pii v1.3.9
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.5.0

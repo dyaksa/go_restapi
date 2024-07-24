@@ -1,60 +1,62 @@
 package entity
 
 import (
-	"github.com/dyaksa/encryption-pii/crypt/types"
+	"github.com/dyaksa/encryption-pii/crypto/types"
 	"github.com/google/uuid"
-
-	t "github.com/dyaksa/encryption-pii/crypto/types"
 )
 
 type ProfileV2 struct {
-	ID    uuid.UUID   `db:"id"`
-	Nik   t.AESChiper `db:"nik"`
-	Name  t.AESChiper `db:"name" bidx_col:"name_bidx" txt_heap_table:"profile_text_heap"`
-	Phone t.AESChiper `db:"phone"`
-	Email t.AESChiper `db:"email" bidx_col:"email_bidx" txt_heap_table:"email_text_heap"`
-	DOB   t.AESChiper `db:"dob"`
+	ID    uuid.UUID       `db:"id"`
+	Nik   types.AESCipher `db:"nik"`
+	Name  types.AESCipher `db:"name" bidx_col:"name_bidx" txt_heap_table:"profile_text_heap"`
+	Phone types.AESCipher `db:"phone"`
+	Email types.AESCipher `db:"email" bidx_col:"email_bidx" txt_heap_table:"email_text_heap"`
+	DOB   types.AESCipher `db:"dob"`
 }
 
 type FetchProfileRowV2 struct {
 	ID    uuid.UUID
-	Nik   t.AESChiper
-	Name  t.AESChiper
-	Phone t.AESChiper
-	Email t.AESChiper
-	DOB   t.AESChiper
+	Nik   types.AESCipher
+	Name  types.AESCipher
+	Phone types.AESCipher
+	Email types.AESCipher
+	DOB   types.AESCipher
 }
 
 type FetchInvoiceRow struct {
 	ID                uuid.UUID
 	CustomerName      string
-	CustomerNameCrypt t.AESChiper
+	CustomerNameCrypt types.AESCipher
 	CustomerAddress   string
-	CustomerAddrCrypt t.AESChiper
+	CustomerAddrCrypt types.AESCipher
 }
 
 type FetchInvoiceRowsCrypt struct {
 	IDField      uuid.UUID
-	CustomerName t.AESChiper
-	CustomerAddr t.AESChiper
+	CustomerName types.AESCipher
+	CustomerAddr types.AESCipher
 }
 
 type Profile struct {
-	ID    uuid.UUID        `db:"id"`
-	Nik   types.AEADString `db:"nik"`
-	Name  types.AEADString `db:"name" bidx_col:"name_bidx" txt_heap_table:"profile_text_heap"`
-	Phone types.AEADString `db:"phone"`
-	Email types.AEADString `db:"email" bidx_col:"email_bidx" txt_heap_table:"email_text_heap"`
-	DOB   types.AEADString `db:"dob"`
+	ID        uuid.UUID       `db:"id"`
+	Nik       types.AESCipher `db:"nik"`
+	NikBidx   string          `db:"nik_bidx" txt_heap_table:"nik_text_heap"`
+	Name      types.AESCipher `db:"name"`
+	NameBidx  string          `db:"name_bidx" txt_heap_table:"name_text_heap"`
+	Phone     types.AESCipher `db:"phone"`
+	PhoneBidx string          `db:"phone_bidx" txt_heap_table:"phone_text_heap"`
+	Email     types.AESCipher `db:"email"`
+	EmailBidx string          `db:"email_bidx" txt_heap_table:"email_text_heap"`
+	DOB       types.AESCipher `db:"dob"`
 }
 
 type FetchProfileRow struct {
 	ID    uuid.UUID
-	Nik   types.AEADString
-	Name  types.AEADString
-	Phone types.AEADString
-	Email types.AEADString
-	DOB   types.AEADString
+	Nik   types.AESCipher
+	Name  types.AESCipher
+	Phone types.AESCipher
+	Email types.AESCipher
+	DOB   types.AESCipher
 }
 
 type FetchProfileParams struct {
@@ -75,11 +77,11 @@ type FetchProfileParams struct {
 
 type FindProfilesByNameRow struct {
 	ID    uuid.UUID
-	Nik   types.AEADString
-	Name  types.AEADString
-	Phone types.AEADString
-	Email types.AEADString
-	Dob   types.AEADString
+	Nik   types.AESCipher
+	Name  types.AESCipher
+	Phone types.AESCipher
+	Email types.AESCipher
+	Dob   types.AESCipher
 }
 
 type FindProfileByParams struct {
