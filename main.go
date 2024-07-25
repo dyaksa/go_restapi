@@ -15,10 +15,11 @@ import (
 )
 
 func NewServer(authMiddleware *middleware.AuthMiddleware) *http.Server {
-	return &http.Server{
+	srv := &http.Server{
 		Addr:    "localhost:7001",
 		Handler: authMiddleware,
 	}
+	return srv
 }
 
 func main() {
