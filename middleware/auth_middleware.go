@@ -4,6 +4,8 @@ import (
 	"golang_restapi/helper"
 	"golang_restapi/model/web"
 	"net/http"
+
+	"go.uber.org/fx"
 )
 
 type AuthMiddleware struct {
@@ -15,7 +17,7 @@ func NewAuthMiddleware(handler http.Handler) *AuthMiddleware {
 }
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if "secret" == r.Header.Get("X-Api-Key") {
+	if r.Header.Get("X-Api-Key") == "secret" {
 		m.handler.ServeHTTP(w, r)
 	} else {
 		w.Header().Set("content-type", "application/json")
@@ -29,3 +31,7 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		helper.JSONEncoder(w, webResponse)
 	}
 }
+
+var Module = fx.Module("middleware", fx.Provide(
+	fx.Annotate(NewAuthMiddleware, fx.As(new(http.Handler))),
+))

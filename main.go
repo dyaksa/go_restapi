@@ -16,7 +16,7 @@ import (
 
 func NewServer(authMiddleware *middleware.AuthMiddleware) *http.Server {
 	srv := &http.Server{
-		Addr:    "localhost:7001",
+		Addr:    ":7001",
 		Handler: authMiddleware,
 	}
 	return srv
