@@ -27,11 +27,13 @@ func NewServer(authMiddleware *middleware.AuthMiddleware) *http.Server {
 	return srv
 }
 
-func main() {
+func init() {
 	if err := godotenv.Load(); err != nil {
 		helper.PanicIf(err)
 	}
+}
 
+func main() {
 	sqlDB := db.DB()
 	validate := validator.New()
 	crypto, err := crypto.New(
