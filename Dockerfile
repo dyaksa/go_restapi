@@ -14,4 +14,4 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags musl -o fab-digital-pii
 EXPOSE 8080
 
 # Run The Application
-CMD ["./fab-digital-pii-sandbox-go"]
+CMD ["make","run"]
