@@ -1,6 +1,6 @@
 @Library(['shared-library', 'pipeline-library']) _
 
-// def vault = new Vault()
+def vault = new Vault()
 
 PipelineDockerEntry([
     // Project Name
@@ -24,7 +24,7 @@ PipelineDockerEntry([
         // APP_KEY = vault.vault('ins/itmtest/develop/example', 'APP_KEY')
 
 		// create .env file
-		// vault.createDotenv("dsz/fab-digital-jtn/${env.BRANCH_NAME}/fab-digital-core-service-revenue", 'env', '.env')
+		vault.createDotenv("dsz/fab-digital-jtn/${env.BRANCH_NAME}/fab-digital-pii-sandbox-go", 'env', '.env')
     },
 
     // Service Test
@@ -39,7 +39,7 @@ PipelineDockerEntry([
         // sh "npm run test"
 
 		// use .env file
-		//vault.useDotenv('env', '.env')
+		vault.useDotenv('env', '.env')
 
 		// sh "go test ./internal/domain/usecases/... -coverprofile=cover.out"
 		//sh "make server-test"
