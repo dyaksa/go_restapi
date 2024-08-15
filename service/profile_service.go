@@ -72,6 +72,7 @@ func (service *ProfileServiceImpl) Create(ctx context.Context, request web.Profi
 		return
 	}
 
+	request.ID = profile.ID
 	return request, nil
 }
 
