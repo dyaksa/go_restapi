@@ -15,4 +15,4 @@ RUN make install \
 EXPOSE 8080
 
 # Run application
-CMD ["make", "start"]
+CMD ["make", "run"]
