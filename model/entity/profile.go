@@ -15,5 +15,4 @@ type Profile struct {
 	PhoneBidx string          `db:"phone_bidx" txt_heap_table:"phone_text_heap"`
 	Email     types.AESCipher `db:"email"`
 	EmailBidx string          `db:"email_bidx" txt_heap_table:"email_text_heap"`
-	DOB       types.AESCipher `db:"dob"`
 }

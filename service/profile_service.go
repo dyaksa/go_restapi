@@ -60,7 +60,6 @@ func (service *ProfileServiceImpl) Create(ctx context.Context, request web.Profi
 		Name:  service.crypto.Encrypt(request.Name, aesx.AesCBC),
 		Phone: service.crypto.Encrypt(request.Phone, aesx.AesCBC),
 		Email: service.crypto.Encrypt(request.Email, aesx.AesCBC),
-		DOB:   service.crypto.Encrypt(request.DOB, aesx.AesCBC),
 	}
 
 	if err = service.crypto.BindHeap(&profile); err != nil {
@@ -87,7 +86,6 @@ func (service *ProfileServiceImpl) FetchProfile(ctx context.Context, id uuid.UUI
 		fpr.Name = service.crypto.Decrypt(aesx.AesCBC)
 		fpr.Phone = service.crypto.Decrypt(aesx.AesCBC)
 		fpr.Email = service.crypto.Decrypt(aesx.AesCBC)
-		fpr.DOB = service.crypto.Decrypt(aesx.AesCBC)
 	})
 	helper.PanicIf(err)
 
@@ -97,7 +95,6 @@ func (service *ProfileServiceImpl) FetchProfile(ctx context.Context, id uuid.UUI
 		Name:  spr.Name.To(),
 		Phone: spr.Phone.To(),
 		Email: spr.Email.To(),
-		DOB:   spr.DOB.To(),
 	}
 
 	return
@@ -114,7 +111,6 @@ func (service *ProfileServiceImpl) FindAll(ctx context.Context, pagination utils
 		fpr.Name = service.crypto.Decrypt(aesx.AesCBC)
 		fpr.Phone = service.crypto.Decrypt(aesx.AesCBC)
 		fpr.Email = service.crypto.Decrypt(aesx.AesCBC)
-		fpr.DOB = service.crypto.Decrypt(aesx.AesCBC)
 	}, func(p entity.Profile) {
 		pr := &dto.FetchProfileDto{
 			ID:    p.ID,
@@ -122,7 +118,6 @@ func (service *ProfileServiceImpl) FindAll(ctx context.Context, pagination utils
 			Name:  p.Name.To(),
 			Phone: p.Phone.To(),
 			Email: p.Email.To(),
-			DOB:   p.DOB.To(),
 		}
 		prs = append(prs, pr)
 	})
@@ -147,7 +142,6 @@ func (service *ProfileServiceImpl) Update(ctx context.Context, id uuid.UUID, req
 		Name:  service.crypto.Encrypt(request.Name, aesx.AesCBC),
 		Phone: service.crypto.Encrypt(request.Phone, aesx.AesCBC),
 		Email: service.crypto.Encrypt(request.Email, aesx.AesCBC),
-		DOB:   service.crypto.Encrypt(request.DOB, aesx.AesCBC),
 	}
 
 	err = service.crypto.BindHeap(&profile)

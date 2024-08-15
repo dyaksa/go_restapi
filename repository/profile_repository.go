@@ -29,7 +29,7 @@ func NewProfileRepository() *ProfileRepository {
 }
 
 func (repository *ProfileRepository) Create(ctx context.Context, tx *sql.Tx, profile entity.Profile) (err error) {
-	query := "INSERT INTO profile (id, nik, nik_bidx, name, name_bidx, phone, phone_bidx, email, email_bidx, dob) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
+	query := "INSERT INTO profile (id, nik, nik_bidx, name, name_bidx, phone, phone_bidx, email, email_bidx) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 	_, err = tx.ExecContext(ctx, query,
 		profile.ID,
 		profile.Nik,
@@ -39,8 +39,7 @@ func (repository *ProfileRepository) Create(ctx context.Context, tx *sql.Tx, pro
 		profile.Phone,
 		profile.PhoneBidx,
 		profile.Email,
-		profile.EmailBidx,
-		profile.DOB)
+		profile.EmailBidx)
 	if err != nil {
 		err = fmt.Errorf("error when inserting profile: %w", err)
 	}
@@ -48,19 +47,19 @@ func (repository *ProfileRepository) Create(ctx context.Context, tx *sql.Tx, pro
 }
 
 func (repository *ProfileRepository) FetchProfile(ctx context.Context, id uuid.UUID, tx *sql.Tx, initProfile func(*entity.Profile)) (entity.Profile, error) {
-	query := "SELECT nik, name, phone, email, dob FROM profile WHERE id = $1"
+	query := "SELECT nik, name, phone, email FROM profile WHERE id = $1"
 	row := tx.QueryRowContext(ctx, query, id)
 	var i entity.Profile
 	if initProfile != nil {
 		initProfile(&i)
 	}
 
-	err := row.Scan(&i.Nik, &i.Name, &i.Phone, &i.Email, &i.DOB)
+	err := row.Scan(&i.Nik, &i.Name, &i.Phone, &i.Email)
 	return i, err
 }
 
 func (repository *ProfileRepository) FindAll(ctx context.Context, pagination utils.Pagination, params dto.ParamsListProfile, tx *sql.Tx, c *crypto.Crypto, initProfile func(*entity.Profile), buildDataFunc func(entity.Profile)) (p []entity.Profile, err error) {
-	query := "SELECT id, nik, name, phone, email, dob FROM profile"
+	query := "SELECT id, nik, name, phone, email FROM profile"
 	var queryParams []interface{}
 	if params.Key != "" && params.Value != "" {
 		if params.Key == "name" {
@@ -87,7 +86,7 @@ func (repository *ProfileRepository) FindAll(ctx context.Context, pagination uti
 		if initProfile != nil {
 			initProfile(&i)
 		}
-		err = rows.Scan(&i.ID, &i.Nik, &i.Name, &i.Phone, &i.Email, &i.DOB)
+		err = rows.Scan(&i.ID, &i.Nik, &i.Name, &i.Phone, &i.Email)
 		if err != nil {
 			return nil, err
 		}
@@ -102,8 +101,8 @@ func (repository *ProfileRepository) FindAll(ctx context.Context, pagination uti
 }
 
 func (repository *ProfileRepository) Update(ctx context.Context, tx *sql.Tx, profile entity.Profile) error {
-	query := "UPDATE profile SET nik = $1, nik_bidx = $2, name = $3, name_bidx = $4, phone = $5, phone_bidx = $6, email = $7, email_bidx = $8, dob = $9 WHERE id = $10"
-	_, err := tx.ExecContext(ctx, query, profile.Nik, profile.NikBidx, profile.Name, profile.NameBidx, profile.Phone, profile.PhoneBidx, profile.Email, profile.EmailBidx, profile.DOB, profile.ID)
+	query := "UPDATE profile SET nik = $1, nik_bidx = $2, name = $3, name_bidx = $4, phone = $5, phone_bidx = $6, email = $7, email_bidx = $8 WHERE id = $9"
+	_, err := tx.ExecContext(ctx, query, profile.Nik, profile.NikBidx, profile.Name, profile.NameBidx, profile.Phone, profile.PhoneBidx, profile.Email, profile.EmailBidx, profile.ID)
 	return err
 }
 
