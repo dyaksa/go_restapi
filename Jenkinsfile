@@ -39,7 +39,7 @@ PipelineDockerEntry([
         // sh "npm run test"
 
 		// use .env file
-		vault.useDotenv('env', '.env')
+		//vault.useDotenv('env', '.env')
 
 		// sh "go test ./internal/domain/usecases/... -coverprofile=cover.out"
 		//sh "make server-test"
@@ -57,7 +57,7 @@ PipelineDockerEntry([
         // sh "docker build --build-arg ARGS_NODE_BUILD=${envStage} --build-arg APP_KEY=${APP_KEY} --rm --no-cache -t ${imageTag} ."
 
 		// use .env file
-		//vault.useDotenv('env', '.env')
+		vault.useDotenv('env', '.env')
 
         sh "docker build --build-arg ARGS_NODE_BUILD=${envStage} --rm --no-cache -t ${imageTag} ."
     },
