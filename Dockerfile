@@ -8,7 +8,7 @@ COPY . .
 USER user
 
 # Build Go
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags musl -o fab-digital-pii-sandbox-go ./cmd/webapi/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags musl -o fab-digital-pii-sandbox-go main.go
 
 # Expose Application Port
 EXPOSE 8080
