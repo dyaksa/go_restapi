@@ -5,5 +5,4 @@ type ProfileRequest struct {
 	Name  string `json:"name" validate:"required"`
 	Phone string `json:"phone" validate:"required"`
 	Email string `json:"email" validate:"required,email"`
-	DOB   string `json:"dob" validate:"required"`
 }

@@ -10,7 +10,6 @@ type FetchProfileDto struct {
 	Name  string    `json:"name"`
 	Phone string    `json:"phone"`
 	Email string    `json:"email"`
-	DOB   string    `json:"dob"`
 }
 
 type ParamsListProfile struct {
