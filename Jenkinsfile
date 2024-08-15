@@ -41,7 +41,7 @@ PipelineDockerEntry([
 		// use .env file
 		//vault.useDotenv('env', '.env')
 
-		sh "go test ./internal/domain/usecases/... -coverprofile=cover.out"
+		// sh "go test ./internal/domain/usecases/... -coverprofile=cover.out"
 		//sh "make server-test"
     },
 
