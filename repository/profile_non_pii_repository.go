@@ -49,12 +49,14 @@ func (repository *ProfileNonPIIRepository) FetchProfile(ctx context.Context, id 
 
 func (repository *ProfileNonPIIRepository) FindAll(ctx context.Context, pagination utils.Pagination, params dto.ParamsListProfile, tx *sql.Tx) (p []entity.ProfileNonPII, err error) {
 	query := "SELECT id, nik, name, phone, email FROM profiles_not_pii"
+	args := []interface{}{}
 	if params.Key != "" && params.Value != "" {
-		query += fmt.Sprintf(" WHERE %s LIKE %s", params.Key, "%"+params.Value+"%")
+		query += " WHERE " + params.Key + " LIKE  $1"
+		args = append(args, "%"+params.Value+"%")
 	}
 
 	query += pagination.PaginateQuery()
-	rows, err := tx.QueryContext(ctx, query, params)
+	rows, err := tx.QueryContext(ctx, query, args...)
 	if err != nil {
 		return
 	}
