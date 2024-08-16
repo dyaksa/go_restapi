@@ -58,7 +58,7 @@ func (service *ProfileNonPIIServiceImpl) Create(ctx context.Context, request web
 
 	err = service.repository.Create(ctx, tx, profile)
 
-	p.ID = profile.ID
+	request.ID = profile.ID
 	p = request
 	return
 }
