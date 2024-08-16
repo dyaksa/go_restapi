@@ -13,8 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Entity interface{}
-
 type Profile interface {
 	Create(ctx context.Context, tx *sql.Tx, profile entity.Profile) error
 	FetchProfile(ctx context.Context, id uuid.UUID, tx *sql.Tx, initProfile func(*entity.Profile)) (entity.Profile, error)

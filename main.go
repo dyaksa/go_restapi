@@ -43,12 +43,15 @@ func main() {
 	helper.PanicIf(err)
 
 	profileRepository := repository.NewProfileRepository()
+	profileNonPIIRepository := repository.NewProfileNonPIIRepository()
 
 	profileServiceImpl := service.NewProfileService(sqlDB, profileRepository, validate, crypto)
+	profileNonPIIServiceImpl := service.NewProfileNonPIIService(sqlDB, profileNonPIIRepository, validate)
 
 	profileHandlerImpl := handler.NewProfileHandler(profileServiceImpl)
+	profileNonPIIHandlerImpl := handler.NewProfileNonPIIHandler(profileNonPIIServiceImpl)
 
-	router := app.SetupRouter(profileHandlerImpl)
+	router := app.SetupRouter(profileHandlerImpl, profileNonPIIHandlerImpl)
 
 	authMiddleware := middleware.NewAuthMiddleware(router)
 	server := NewServer(authMiddleware)
