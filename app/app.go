@@ -10,10 +10,10 @@ import (
 func SetupRouter(profileHandler handler.ProfileHandler, profileNonPIIHandler handler.ProfileNonPIIHandler) *httprouter.Router {
 	route := httprouter.New()
 
-	route.POST("/perf-test-go", profileHandler.Create)
-	route.GET("/perf-test-go", profileHandler.FindAll)
-	route.GET("/perf-test-go/:id", profileHandler.FetchProfile)
-	route.PUT("/perf-test-go/:id", profileHandler.Update)
+	route.POST("/perf-test-go/profile", profileHandler.Create)
+	route.GET("/perf-test-go/profile", profileHandler.FindAll)
+	route.GET("/perf-test-go/profile/:id", profileHandler.FetchProfile)
+	route.PUT("/perf-test-go/profile/:id", profileHandler.Update)
 
 	route.POST("/perf-test-go/profile-not-pii", profileNonPIIHandler.Create)
 	route.GET("/perf-test-go/profile-not-pii", profileNonPIIHandler.FindAll)
