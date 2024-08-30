@@ -1,5 +1,5 @@
 run:
-	go run main.go
+	go run ./cmd/main.go
 
 install:
 	go mod download
